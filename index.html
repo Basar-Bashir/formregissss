@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Event Registration</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #13151c;
+      --card: #181b25;
+      --border: #252836;
+      --border-glow: #3a4060;
+      --gold: #c9a84c;
+      --gold-light: #e8c87a;
+      --gold-dim: rgba(201,168,76,0.12);
+      --text: #eeeaf2;
+      --muted: #7a7d8f;
+      --error: #e05c6a;
+      --success: #4ecb8d;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      overflow-x: hidden;
+    }
+
+    /* Background ambient orbs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::before {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+      top: -100px; right: -100px;
+    }
+    body::after {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(80,100,200,0.07) 0%, transparent 70%);
+      bottom: -100px; left: -100px;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    /* Header section */
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeDown 0.7s ease both;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid rgba(201,168,76,0.35);
+      padding: 0.3rem 0.9rem;
+      border-radius: 100px;
+      margin-bottom: 1.2rem;
+      background: var(--gold-dim);
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 5vw, 3rem);
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.6rem;
+    }
+
+    h1 span {
+      color: var(--gold);
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      color: var(--muted);
+      font-weight: 300;
+      letter-spacing: 0.01em;
+    }
+
+    /* Decorative line */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0 auto 2.5rem;
+      width: 60%;
+      animation: fadeDown 0.7s 0.1s ease both;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border-glow));
+    }
+    .divider::after { background: linear-gradient(to left, transparent, var(--border-glow)); }
+    .divider-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      opacity: 0.7;
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 2.5rem 2.25rem;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+      animation: fadeUp 0.7s 0.15s ease both;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0.5;
+    }
+
+    /* Fields */
+    .field {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.55rem;
+      transition: color 0.2s;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      transition: color 0.2s;
+      pointer-events: none;
+    }
+
+    input, select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem 0.85rem 2.75rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+      -webkit-appearance: none;
+    }
+
+    input::placeholder { color: #3d4157; }
+
+    input:focus, select:focus {
+      border-color: var(--gold);
+      background: #151821;
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    }
+
+    input:focus + .input-icon,
+    .input-wrap:focus-within .input-icon {
+      color: var(--gold);
+    }
+
+    /* Select arrow */
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--muted);
+      pointer-events: none;
+      transition: border-top-color 0.2s;
+    }
+    .select-wrap:focus-within::after { border-top-color: var(--gold); }
+
+    select option {
+      background: #1a1d28;
+      color: var(--text);
+    }
+
+    /* Field layout: two columns for name + phone */
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* Error state */
+    .field.error input,
+    .field.error select {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(224,92,106,0.1);
+    }
+    .error-msg {
+      display: none;
+      font-size: 0.72rem;
+      color: var(--error);
+      margin-top: 0.4rem;
+      padding-left: 0.25rem;
+    }
+    .field.error .error-msg { display: block; }
+    .field.error label { color: var(--error); }
+
+    /* Submit button */
+    .btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #b8933f, var(--gold), #d4aa55);
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: #0d0f14;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    }
+
+    .btn:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(201,168,76,0.4);
+    }
+
+    .btn:active { transform: translateY(0); }
+
+    /* Success state */
+    .success-overlay {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem 0;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .success-overlay.visible { display: flex; }
+    .form-inner.hidden { display: none; }
+
+    .check-circle {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(78,203,141,0.12);
+      border: 1px solid rgba(78,203,141,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .check-circle svg { color: var(--success); }
+
+    .success-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.6rem;
+    }
+
+    .success-sub {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .success-name {
+      color: var(--gold);
+    }
+
+    .reset-btn {
+      margin-top: 1.75rem;
+      background: none;
+      border: 1px solid var(--border-glow);
+      border-radius: 8px;
+      padding: 0.6rem 1.5rem;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .reset-btn:hover { color: var(--text); border-color: var(--gold); }
+
+    /* Footer note */
+    .footer-note {
+      text-align: center;
+      font-size: 0.72rem;
+      color: #3d4060;
+      margin-top: 1.5rem;
+      animation: fadeDown 0.7s 0.3s ease both;
+    }
+
+    /* Animations */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .row-2 { grid-template-columns: 1fr; }
+      .card { padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <div class="header">
+    <div class="badge">✦ Student Portal</div>
+    <h1>Event <span>Registration</span></h1>
+    <p class="subtitle">Secure your spot at our upcoming events</p>
+  </div>
+
+  <div class="divider"><div class="divider-dot"></div></div>
+
+  <div class="card">
+
+    <!-- Success overlay -->
+    <div class="success-overlay" id="successOverlay">
+      <div class="check-circle">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <p class="success-title">You're Registered!</p>
+      <p class="success-sub">
+        Welcome, <span class="success-name" id="successName"></span>! 🎉<br/>
+        Confirmation details will be sent to your email.
+      </p>
+      <button class="reset-btn" onclick="resetForm()">Register for another event</button>
+    </div>
+
+    <!-- Form -->
+    <form class="form-inner" id="registrationForm" novalidate>
+
+      <div class="row-2">
+        <div class="field" id="field-name">
+          <label for="name">Full Name</label>
+          <div class="input-wrap">
+            <input type="text" id="name" placeholder="Jane Smith" autocomplete="name"/>
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <span class="error-msg">Please enter your full name.</span>
+        </div>
+
+        <div class="field" id="field-phone">
+          <label for="phone">Phone Number</label>
+          <div class="input-wrap">
+            <input type="tel" id="phone" placeholder="+91 98765 43210" autocomplete="tel"/>
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.64 12a19.79 19.79 0 0 1-3-8.59A2 2 0 0 1 3.63 1.5h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9a16 16 0 0 0 6.91 6.91l1.67-1.67a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </div>
+          <span class="error-msg">Enter a valid phone number.</span>
+        </div>
+      </div>
+
+      <div class="field" id="field-email">
+        <label for="email">Email Address</label>
+        <div class="input-wrap">
+          <input type="email" id="email" placeholder="jane@university.edu" autocomplete="email"/>
+          <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+        <span class="error-msg">Enter a valid email address.</span>
+      </div>
+
+      <div class="field" id="field-event">
+        <label for="event">Select Event</label>
+        <div class="input-wrap select-wrap">
+          <select id="event" style="padding-left:2.75rem">
+            <option value="" disabled selected>— Choose an event —</option>
+            <option value="hackathon">🚀 National Hackathon 2025</option>
+            <option value="techsummit">💡 Tech Innovation Summit</option>
+            <option value="culturalnight">🎭 Annual Cultural Night</option>
+            <option value="sportsday">🏅 Inter-College Sports Day</option>
+            <option value="workshop">🧠 AI & Machine Learning Workshop</option>
+            <option value="quiz">📚 Inter-Departmental Quiz Championship</option>
+          </select>
+          <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="z-index:1">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <span class="error-msg">Please select an event.</span>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">
+        Confirm Registration →
+      </button>
+
+    </form>
+  </div>
+
+  <p class="footer-note">By registering, you agree to our Terms & Privacy Policy. No spam, ever.</p>
+</div>
+
+<script>
+  const form = document.getElementById('registrationForm');
+  const successOverlay = document.getElementById('successOverlay');
+
+  function validateField(id, validator) {
+    const field = document.getElementById('field-' + id);
+    const input = document.getElementById(id);
+    const valid = validator(input.value.trim());
+    field.classList.toggle('error', !valid);
+    return valid;
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const v1 = validateField('name',  v => v.length >= 2);
+    const v2 = validateField('email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+    const v3 = validateField('phone', v => /^[\d\s\+\-\(\)]{7,15}$/.test(v));
+    const v4 = validateField('event', v => v !== '');
+
+    if (v1 && v2 && v3 && v4) {
+      const name = document.getElementById('name').value.trim().split(' ')[0];
+      document.getElementById('successName').textContent = name;
+      form.classList.add('hidden');
+      successOverlay.classList.add('visible');
+    }
+  });
+
+  // Live validation on blur
+  ['name', 'email', 'phone', 'event'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('blur', () => {
+      const validators = {
+        name:  v => v.length >= 2,
+        email: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+        phone: v => /^[\d\s\+\-\(\)]{7,15}$/.test(v),
+        event: v => v !== ''
+      };
+      if (el.value.trim()) validateField(id, validators[id]);
+    });
+    el.addEventListener('input', () => {
+      document.getElementById('field-' + id).classList.remove('error');
+    });
+  });
+
+  function resetForm() {
+    form.reset();
+    form.classList.remove('hidden');
+    successOverlay.classList.remove('visible');
+    ['name','email','phone','event'].forEach(id => {
+      document.getElementById('field-' + id).classList.remove('error');
+    });
+  }
+</script>
+</body>
+</html>
