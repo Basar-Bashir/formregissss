@@ -286,6 +286,42 @@
 
     .btn:active { transform: translateY(0); }
 
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn .btn-text { display: inline-flex; align-items: center; gap: 0.5rem; }
+
+    .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(13,15,20,0.3);
+      border-top-color: #0d0f14;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .btn.loading .spinner { display: inline-block; }
+    .btn.loading .btn-arrow { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Webhook error banner */
+    .webhook-error {
+      display: none;
+      background: rgba(224,92,106,0.1);
+      border: 1px solid rgba(224,92,106,0.3);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      color: #e88a94;
+      margin-top: 0.75rem;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .webhook-error.visible { display: block; }
+
     /* Success state */
     .success-overlay {
       display: none;
@@ -457,8 +493,16 @@
       </div>
 
       <button type="submit" class="btn" id="submitBtn">
-        Confirm Registration →
+        <span class="btn-text">
+          <span class="spinner"></span>
+          <span id="btnLabel">Confirm Registration</span>
+          <span class="btn-arrow">→</span>
+        </span>
       </button>
+
+      <div class="webhook-error" id="webhookError">
+        ⚠️ Could not reach the server. Please check your connection and try again.
+      </div>
 
     </form>
   </div>
@@ -467,8 +511,13 @@
 </div>
 
 <script>
-  const form = document.getElementById('registrationForm');
+  const WEBHOOK_URL = 'http://localhost:5678/webhook-test/student-registration';
+
+  const form        = document.getElementById('registrationForm');
+  const submitBtn   = document.getElementById('submitBtn');
+  const btnLabel    = document.getElementById('btnLabel');
   const successOverlay = document.getElementById('successOverlay');
+  const webhookError   = document.getElementById('webhookError');
 
   function validateField(id, validator) {
     const field = document.getElementById('field-' + id);
@@ -478,19 +527,55 @@
     return valid;
   }
 
-  form.addEventListener('submit', function(e) {
+  function setLoading(on) {
+    submitBtn.disabled = on;
+    submitBtn.classList.toggle('loading', on);
+    btnLabel.textContent = on ? 'Sending...' : 'Confirm Registration';
+  }
+
+  form.addEventListener('submit', async function(e) {
     e.preventDefault();
+    webhookError.classList.remove('visible');
 
     const v1 = validateField('name',  v => v.length >= 2);
     const v2 = validateField('email', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
     const v3 = validateField('phone', v => /^[\d\s\+\-\(\)]{7,15}$/.test(v));
     const v4 = validateField('event', v => v !== '');
 
-    if (v1 && v2 && v3 && v4) {
-      const name = document.getElementById('name').value.trim().split(' ')[0];
-      document.getElementById('successName').textContent = name;
+    if (!v1 || !v2 || !v3 || !v4) return;
+
+    const eventSelect = document.getElementById('event');
+    const payload = {
+      name:       document.getElementById('name').value.trim(),
+      email:      document.getElementById('email').value.trim(),
+      phone:      document.getElementById('phone').value.trim(),
+      event_id:   eventSelect.value,
+      event_name: eventSelect.options[eventSelect.selectedIndex].text.replace(/^\S+\s/, ''),
+      submitted_at: new Date().toISOString()
+    };
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      // Success
+      const firstName = payload.name.split(' ')[0];
+      document.getElementById('successName').textContent = firstName;
       form.classList.add('hidden');
       successOverlay.classList.add('visible');
+
+    } catch (err) {
+      console.error('Webhook error:', err);
+      webhookError.classList.add('visible');
+    } finally {
+      setLoading(false);
     }
   });
 
@@ -508,6 +593,7 @@
     });
     el.addEventListener('input', () => {
       document.getElementById('field-' + id).classList.remove('error');
+      webhookError.classList.remove('visible');
     });
   });
 
@@ -515,6 +601,7 @@
     form.reset();
     form.classList.remove('hidden');
     successOverlay.classList.remove('visible');
+    webhookError.classList.remove('visible');
     ['name','email','phone','event'].forEach(id => {
       document.getElementById('field-' + id).classList.remove('error');
     });
