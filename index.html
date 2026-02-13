@@ -559,7 +559,10 @@
     try {
       const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify(payload)
       });
 
@@ -573,6 +576,7 @@
 
     } catch (err) {
       console.error('Webhook error:', err);
+      webhookError.textContent = `⚠️ Error: ${err.message} — Make sure n8n is running and workflow is active.`;
       webhookError.classList.add('visible');
     } finally {
       setLoading(false);
