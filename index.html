@@ -557,15 +557,21 @@
     setLoading(true);
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
       // Using no-cors + text/plain to avoid preflight CORS block
       await fetch(WEBHOOK_URL, {
         method: 'POST',
         mode: 'no-cors',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'text/plain'
         },
         body: JSON.stringify(payload)
       });
+
+      clearTimeout(timeout);
 
       // no-cors always returns opaque response, so we treat reaching here as success
       const firstName = payload.name.split(' ')[0];
@@ -609,17 +615,6 @@
       document.getElementById('field-' + id).classList.remove('error');
     });
   }
-  const body = JSON.parse($input.item.json.body);
-
-return {
-  json: {
-    name: body.name,
-    email: body.email,
-    phone: body.phone,
-    event_name: body.event_name,
-    submitted_at: body.submitted_at
-  }
-};
 </script>
 </body>
 </html>
