@@ -609,6 +609,17 @@
       document.getElementById('field-' + id).classList.remove('error');
     });
   }
+  const body = JSON.parse($input.item.json.body);
+
+return {
+  json: {
+    name: body.name,
+    email: body.email,
+    phone: body.phone,
+    event_name: body.event_name,
+    submitted_at: body.submitted_at
+  }
+};
 </script>
 </body>
 </html>
